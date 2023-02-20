@@ -9,6 +9,8 @@ import {
   unauthorizedHandler,
   notFoundHandler,
 } from "./errorHandlers.js";
+import chatsRouter from "./apis/chats/index.js";
+import messagesRouter from "./apis/messages/index.js";
 import passport from "passport";
 import googleStrategy from "./library/authentication/google.js";
 
@@ -22,9 +24,11 @@ passport.use("google", googleStrategy);
 
 server.use(cors());
 server.use(express.json());
-server.use(passport.initialize());
 
 //ENDPOINTS
+server.use("/chats", chatsRouter);
+server.use("/messages", messagesRouter);
+server.use(passport.initialize());
 
 //ERROR HANDLERS
 server.use(badRequestHandler);
