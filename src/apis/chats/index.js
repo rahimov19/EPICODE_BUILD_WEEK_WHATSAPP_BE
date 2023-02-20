@@ -3,85 +3,180 @@ import createHttpError from "http-errors";
 import { checksChatSchema } from "./validator.js";
 import ChatsModel from "./model.js";
 import MessagesModel from "../messages/model.js";
+import { JWTAuthMiddleware } from "../../library/authentication/jwtAuth.js";
 
 const chatsRouter = express.Router();
 
 // MESSAGES
 
-chatsRouter.post("/:chatId/messages", async (req, res, next) => {
-  try {
-    const chat = await ChatsModel.findById(req.params.chatId);
-    if (chat) {
-      req.body.sender = "63f351c352128a6d77801509"; // !replace with req.user._id
+chatsRouter.post(
+  "/:chatId/messages",
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const chat = await ChatsModel.findById(req.params.chatId);
+      if (chat) {
+        const index = chat.members.findIndex(
+          (m) => m._id.toString() === req.user._id
+        );
+        console.log(
+          "🚀 ~ file: index.js:131 ~ chatsRouter.get ~ index:",
+          index
+        );
 
-      const message = {
-        ...req.body,
-      };
+        if (index !== -1) {
+          req.body.sender = req.user._id;
 
-      const newMessage = new MessagesModel(message);
+          const message = {
+            ...req.body,
+          };
 
-      const { _id } = await newMessage.save();
+          const newMessage = new MessagesModel(message);
 
-      chat.history.push(_id);
+          const { _id } = await newMessage.save();
 
-      await ChatsModel.findByIdAndUpdate(req.params.chatId, chat, {
-        new: true,
-      });
+          chat.history.push(_id);
 
-      res.send({ _id });
-    } else {
-      next(
-        createHttpError(404, `Chat with id ${req.params.chatId} not found!`)
-      );
+          await ChatsModel.findByIdAndUpdate(req.params.chatId, chat, {
+            new: true,
+          });
+
+          res.send({ _id });
+        } else {
+          next(
+            createHttpError(
+              401,
+              `Authorization failed for chat with ID ${req.params.chatId}!`
+            )
+          );
+        }
+      } else {
+        next(
+          createHttpError(404, `Chat with id ${req.params.chatId} not found!`)
+        );
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 
-chatsRouter.get("/messages", async (req, res, next) => {
+chatsRouter.get("/messages", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const messages = await MessagesModel.find().populate("sender");
     res.send(messages);
   } catch (error) {
     next(error);
   }
-});
+}); //! need to delete this endpoint?
 
-chatsRouter.get("/messages/:messageId", async (req, res, next) => {
-  try {
-    const message = await MessagesModel.findById(req.params.messageId);
-    res.send(message);
-  } catch (error) {
-    next(error);
+chatsRouter.put(
+  "/messages/:messageId",
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const message = await MessagesModel.findById(req.params.messageId);
+      if (message) {
+        const auth = message.sender.toString() === req.user._id;
+
+        if (auth) {
+          const updatedMessage = await MessagesModel.findByIdAndUpdate(
+            req.params.messageId,
+            { text: req.body.text },
+            { new: true }
+          );
+          res.send(updatedMessage);
+        } else {
+          next(
+            createHttpError(
+              401,
+              `You cannot edit Message with id ${req.params.messageId}, since you are not the sender!`
+            )
+          );
+        }
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Message with id ${req.params.messageId} not found!`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
+
+chatsRouter.delete(
+  "/messages/:messageId",
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      const message = await MessagesModel.findById(req.params.messageId);
+      if (message) {
+        const auth = message.sender.toString() === req.user._id;
+        console.log("🚀 ~ file: index.js:77 ~ auth:", auth);
+
+        if (auth) {
+          const updatedMessage = await MessagesModel.findByIdAndUpdate(
+            req.params.messageId,
+            { deleted: true },
+            { new: true }
+          );
+          res.send(updatedMessage);
+        } else {
+          next(
+            createHttpError(
+              401,
+              `You cannot delete Message with id ${req.params.messageId}, since you are not the sender!`
+            )
+          );
+        }
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Message with id ${req.params.messageId} not found!`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 // CHATS
 
-chatsRouter.post("/", checksChatSchema, async (req, res, next) => {
-  try {
-    req.body.members = [...req.body.members, "63f351c352128a6d77801509"]; // !replace with req.user._id
-    req.body.history = [];
-    req.body.deletedBy = [];
+chatsRouter.post(
+  "/",
+  checksChatSchema,
+  JWTAuthMiddleware,
+  async (req, res, next) => {
+    try {
+      req.body.members = [...req.body.members, req.user._id];
+      req.body.history = [];
+      req.body.deletedBy = [];
 
-    const chat = {
-      ...req.body,
-    };
+      const chat = {
+        ...req.body,
+      };
 
-    const newChat = new ChatsModel(chat);
+      const newChat = new ChatsModel(chat);
 
-    const { id } = await newChat.save();
+      const { id } = await newChat.save();
 
-    res.send({ id });
-  } catch (error) {
-    next(error);
+      res.send({ id });
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 
-chatsRouter.get("/", async (req, res, next) => {
+chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
-    const chats = await ChatsModel.find()
+    const chats = await ChatsModel.find({ members: { $in: req.user._id } })
       .populate("history")
       .populate("members");
     res.send(chats);
@@ -90,12 +185,60 @@ chatsRouter.get("/", async (req, res, next) => {
   }
 });
 
-chatsRouter.get("/:chatId", async (req, res, next) => {
+chatsRouter.get("/:chatId", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const chat = await ChatsModel.findById(req.params.chatId)
       .populate("history")
       .populate("members");
-    res.send(chat);
+    console.log("🚀 ~ file: index.js:129 ~ chatsRouter.get ~ chat:", chat);
+
+    const index = chat.members.findIndex(
+      (m) => m._id.toString() === req.user._id
+    );
+    console.log("🚀 ~ file: index.js:131 ~ chatsRouter.get ~ index:", index);
+
+    if (index !== -1) {
+      res.send(chat);
+    } else {
+      next(
+        createHttpError(
+          401,
+          `Authorization failed for chat with ID ${req.params.chatId}!`
+        )
+      );
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+chatsRouter.delete("/:chatId", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    const chat = await ChatsModel.findById(req.params.chatId);
+    const index = chat.members.findIndex(
+      (m) => m._id.toString() === req.user._id
+    );
+    console.log("🚀 ~ file: index.js:131 ~ chatsRouter.get ~ index:", index);
+
+    if (index !== -1) {
+      const updatedChat = await ChatsModel.findByIdAndUpdate(
+        req.params.chatId,
+        { $push: { deletedBy: req.user._id } },
+        { new: true }
+      )
+        .populate("history")
+        .populate("members")
+        .populate("deletedBy");
+
+      res.send(updatedChat);
+    } else {
+      next(
+        createHttpError(
+          401,
+          `Authorization failed for chat with ID ${req.params.chatId}!`
+        )
+      );
+    }
   } catch (error) {
     next(error);
   }
