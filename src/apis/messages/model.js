@@ -4,9 +4,8 @@ const { Schema, model } = mongoose;
 
 const messagesSchema = new Schema(
   {
-    history: [{ type: Schema.Types.ObjectId, ref: "Messages" }],
-    type: { type: String, required: true },
-    members: [{ type: Schema.Types.ObjectId, ref: "Users" }],
+    sender: { type: Schema.Types.ObjectId, ref: "User" },
+    text: { type: String, required: true },
     deleted: { type: Boolean, default: false },
   },
   {
@@ -14,4 +13,4 @@ const messagesSchema = new Schema(
   }
 );
 
-export default model("Message", messagesSchema);
+export default model("Messages", messagesSchema);
