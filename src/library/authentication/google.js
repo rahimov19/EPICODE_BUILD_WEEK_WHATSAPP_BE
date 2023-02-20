@@ -1,5 +1,5 @@
 import GoogleStrategy from "passport-google-oauth20";
-import UsersModel from "../../api/users/model.js";
+import UsersModel from "../../apis/users/model.js";
 import { createAccessToken } from "./jwtTools.js";
 
 const googleStrategy = new GoogleStrategy(
