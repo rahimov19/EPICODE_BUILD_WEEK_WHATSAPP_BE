@@ -9,6 +9,7 @@ import {
   unauthorizedHandler,
   notFoundHandler,
 } from "./errorHandlers.js";
+import usersRouter from "./apis/users/index.js";
 
 const server = express();
 
@@ -20,6 +21,7 @@ server.use(cors());
 server.use(express.json());
 
 //ENDPOINTS
+server.use("/users", usersRouter);
 
 //ERROR HANDLERS
 server.use(badRequestHandler);
