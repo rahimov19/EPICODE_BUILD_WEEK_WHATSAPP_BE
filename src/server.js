@@ -9,6 +9,7 @@ import {
   unauthorizedHandler,
   notFoundHandler,
 } from "./errorHandlers.js";
+import usersRouter from "./apis/users/index.js";
 import chatsRouter from "./apis/chats/index.js";
 import messagesRouter from "./apis/messages/index.js";
 import passport from "passport";
@@ -26,6 +27,7 @@ server.use(cors());
 server.use(express.json());
 
 //ENDPOINTS
+server.use("/users", usersRouter);
 server.use("/chats", chatsRouter);
 server.use("/messages", messagesRouter);
 server.use(passport.initialize());
