@@ -11,10 +11,14 @@ import {
 } from "./errorHandlers.js";
 import chatsRouter from "./apis/chats/index.js";
 import messagesRouter from "./apis/messages/index.js";
+import passport from "passport";
+import googleStrategy from "./library/authentication/google.js";
 
 const server = express();
 
 const port = process.env.PORT || 3001;
+
+passport.use("google", googleStrategy);
 
 //MIDDLEWARES
 
@@ -24,6 +28,7 @@ server.use(express.json());
 //ENDPOINTS
 server.use("/chats", chatsRouter);
 server.use("/messages", messagesRouter);
+server.use(passport.initialize());
 
 //ERROR HANDLERS
 server.use(badRequestHandler);
