@@ -31,7 +31,7 @@ usersRouter.get("/", async (req, res, next) => {
       mongoQuery.options.fields
     );
 
-    res.send({ users });
+    res.send(users);
   } catch {
     next(error);
   }
