@@ -9,6 +9,8 @@ import {
   unauthorizedHandler,
   notFoundHandler,
 } from "./errorHandlers.js";
+import chatsRouter from "./apis/chats/index.js";
+import messagesRouter from "./apis/messages/index.js";
 
 const server = express();
 
@@ -20,6 +22,8 @@ server.use(cors());
 server.use(express.json());
 
 //ENDPOINTS
+server.use("/chats", chatsRouter);
+server.use("/messages", messagesRouter);
 
 //ERROR HANDLERS
 server.use(badRequestHandler);

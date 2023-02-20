@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Whats App clone",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "jest --watchAll",
-    "dev": "nodemon -r dotenv/config -e js ./src/server.ts",
+    "dev": "nodemon -r dotenv/config -e js ./src/server.js",
     "build": "tsc"
   },
   "repository": {
