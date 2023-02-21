@@ -13,36 +13,43 @@ import usersRouter from "./apis/users/index.js";
 import chatsRouter from "./apis/chats/index.js";
 import passport from "passport";
 import googleStrategy from "./library/authentication/google.js";
+import { Server } from "socket.io";
+import { createServer } from "http";
+import { newConnectionhandler } from "./socket/index.js";
 
-const server = express();
+const expressServer = express();
 
 const port = process.env.PORT || 3001;
+
+const httpServer = createServer(expressServer);
+const io = new Server(httpServer);
+io.on("connection", newConnectionhandler);
 
 passport.use("google", googleStrategy);
 
 //MIDDLEWARES
 
-server.use(cors());
-server.use(express.json());
+expressServer.use(cors());
+expressServer.use(express.json());
 
 //ENDPOINTS
-server.use("/users", usersRouter);
-server.use("/chats", chatsRouter);
-server.use(passport.initialize());
+expressServer.use("/users", usersRouter);
+expressServer.use("/chats", chatsRouter);
+expressServer.use(passport.initialize());
 
 //ERROR HANDLERS
-server.use(badRequestHandler);
-server.use(unauthorizedHandler);
-server.use(forbiddenHandler);
-server.use(notFoundHandler);
-server.use(genericErrorHAndler);
+expressServer.use(badRequestHandler);
+expressServer.use(unauthorizedHandler);
+expressServer.use(forbiddenHandler);
+expressServer.use(notFoundHandler);
+expressServer.use(genericErrorHAndler);
 
 mongoose.connect(process.env.MONGO_URL);
 
 mongoose.connection.on("connected", () => {
   console.log("Connected to Mongo!");
-  server.listen(port, () => {
-    console.table(listEndpoints(server));
+  httpServer.listen(port, () => {
+    console.table(listEndpoints(expressServer));
     console.log(`Server is running on port: ${port}`);
   });
 });
