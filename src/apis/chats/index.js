@@ -178,7 +178,18 @@ chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const chats = await ChatsModel.find({ members: { $in: req.user._id } })
       .populate("history")
-      .populate("members");
+      .populate("members")
+      .transform((doc) => {
+        const docs = doc.map((chat) => {
+          const sortedMembers = chat.members.sort(
+            (a, b) => (b._id == req.user._id) - (a._id == req.user._id)
+          );
+          chat.members = sortedMembers;
+          return chat;
+        });
+        return docs;
+        //I will always be the last user in this scenario
+      });
     res.send(chats);
   } catch (error) {
     next(error);
