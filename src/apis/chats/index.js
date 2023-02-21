@@ -182,7 +182,7 @@ chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
       .transform((doc) => {
         const docs = doc.map((chat) => {
           const sortedMembers = chat.members.sort(
-            (a, b) => (b._id == req.user._id) - (a._id == req.user._id)
+            (a, b) => (a._id == req.user._id) - (b._id == req.user._id)
           );
           chat.members = sortedMembers;
           return chat;
