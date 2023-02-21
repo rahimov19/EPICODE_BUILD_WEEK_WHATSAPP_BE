@@ -110,11 +110,13 @@ usersRouter.post(
   async (req, res, next) => {
     try {
       //we get from req.body the picture we want to upload
-      console.log(req.file.mimetype);
+
       console.log("ID: ", req.user._id);
+      const url = req.file.path;
+      console.log("URL", url);
       const updatedUser = await UsersModel.findByIdAndUpdate(
         req.user._id,
-        { avatar: req.file.path },
+        { avatar: url },
         { new: true, runValidators: true }
       );
       if (updatedUser) {
