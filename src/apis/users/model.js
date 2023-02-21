@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 const usersSchema = new Schema(
   {
     username: { type: String, required: true },
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     avatar: { type: String, require: false },
     //if I want to implement google OAuth, then the password won't be required
