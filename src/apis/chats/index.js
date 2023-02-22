@@ -250,7 +250,7 @@ chatsRouter.post(
 chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const chats = await ChatsModel.find({ members: { $in: req.user._id } })
-      .populate("history")
+      .populate({ path: "history", populate: { path: "sender" } })
       .populate("members")
       .transform((doc) => {
         const docs = doc.map((chat) => {
