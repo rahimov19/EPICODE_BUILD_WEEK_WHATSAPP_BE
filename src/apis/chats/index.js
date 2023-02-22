@@ -272,7 +272,7 @@ chatsRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
 chatsRouter.get("/:chatId", JWTAuthMiddleware, async (req, res, next) => {
   try {
     const chat = await ChatsModel.findById(req.params.chatId)
-      .populate("history")
+      .populate({ path: "history", populate: { path: "sender" } })
       .populate("members");
     console.log("🚀 ~ file: index.js:129 ~ chatsRouter.get ~ chat:", chat);
 
