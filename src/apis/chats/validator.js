@@ -9,6 +9,13 @@ const chatSchema = {
         "Type is a mandatory field and needs to be a String (private or group).",
     },
   },
+  firstMessage: {
+    in: ["body"],
+    isString: {
+      errorMessage:
+        "firstMessage is a mandatory field and needs to be a String.",
+    },
+  },
 };
 
 export const checksChatSchema = checkSchema(chatSchema);

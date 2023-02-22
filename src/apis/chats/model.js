@@ -8,6 +8,8 @@ const chatsSchema = new Schema(
     type: { type: String, enum: ["private", "group"], required: true },
     members: [{ type: Schema.Types.ObjectId, ref: "User" }],
     deletedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    firstMessage: { type: String, required: true },
+    groupName: { type: String },
   },
   {
     timestamps: true, // this option automatically adds the createdAt and updatedAt fields
