@@ -155,19 +155,92 @@ chatsRouter.post(
   JWTAuthMiddleware,
   async (req, res, next) => {
     try {
-      req.body.members = [...req.body.members, req.user._id];
-      req.body.history = [];
-      req.body.deletedBy = [];
+      if (req.body.type === "private") {
+        // checking if such a private chat already exists
+        const recipient = req.body.members[0];
+        req.body.members = [...req.body.members, req.user._id];
 
-      const chat = {
-        ...req.body,
-      };
+        const [checkDublicate] = await ChatsModel.find({
+          members: req.body.members,
+        });
 
-      const newChat = new ChatsModel(chat);
+        if (checkDublicate) {
+          next(
+            createHttpError(
+              403,
+              `This chat already exists with ID ${checkDublicate._id.toString()}!`
+            )
+          );
+        } else {
+          // reversing members array and check again if exists
+          req.body.members = [req.user._id, recipient];
+          const [checkDublicateReverse] = await ChatsModel.find({
+            members: req.body.members,
+          });
+          if (checkDublicateReverse) {
+            next(
+              createHttpError(
+                403,
+                `This chat already exists with ID ${checkDublicateReverse._id.toString()}!`
+              )
+            );
+          } else {
+            // no duplicates --> creating a new chat in database
+            const message = {
+              sender: req.user._id,
+              text: req.body.firstMessage,
+              deleted: false,
+            };
 
-      const { id } = await newChat.save();
+            const newMessage = new MessagesModel(message);
 
-      res.send({ id });
+            const { _id } = await newMessage.save();
+
+            req.body.members = [...req.body.members, req.user._id];
+            req.body.history = [_id];
+            req.body.deletedBy = [];
+
+            const chat = {
+              type: "private",
+              members: req.body.members,
+              history: req.body.history,
+              deletedBy: req.body.deletedBy,
+              firstMessage: req.body.firstMessage,
+            };
+
+            const newChat = new ChatsModel(chat);
+
+            const { id } = await newChat.save();
+
+            res.send({ id });
+          }
+        }
+      } else {
+        // Creating Group Chat without checking if same exists
+        const message = {
+          sender: req.user._id,
+          text: req.body.firstMessage,
+          deleted: false,
+        };
+
+        const newMessage = new MessagesModel(message);
+
+        const { _id } = await newMessage.save();
+
+        req.body.members = [...req.body.members, req.user._id];
+        req.body.history = [_id];
+        req.body.deletedBy = [];
+
+        const chat = {
+          ...req.body,
+        };
+
+        const newChat = new ChatsModel(chat);
+
+        const { id } = await newChat.save();
+
+        res.send({ id });
+      }
     } catch (error) {
       next(error);
     }

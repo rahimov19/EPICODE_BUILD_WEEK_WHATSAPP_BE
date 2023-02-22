@@ -21,7 +21,7 @@ const cloudinaryUploader = multer({
 
 const usersRouter = express.Router();
 
-usersRouter.get("/", async (req, res, next) => {
+usersRouter.get("/", JWTAuthMiddleware, async (req, res, next) => {
   try {
     //search users by email or username (you find them in mongoquery.criteria)
     const mongoQuery = q2m(req.query);
