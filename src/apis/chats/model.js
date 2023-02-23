@@ -10,6 +10,7 @@ const chatsSchema = new Schema(
     deletedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     firstMessage: { type: String, required: true },
     groupName: { type: String },
+    room: { type: String, required: true },
   },
   {
     timestamps: true, // this option automatically adds the createdAt and updatedAt fields
