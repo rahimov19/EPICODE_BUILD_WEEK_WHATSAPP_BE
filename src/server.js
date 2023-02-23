@@ -16,20 +16,43 @@ import googleStrategy from "./library/authentication/google.js";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import { newConnectionhandler } from "./socket/index.js";
+import { instrument } from "@socket.io/admin-ui";
 
 const expressServer = express();
 
 const port = process.env.PORT || 3001;
 
 const httpServer = createServer(expressServer);
-const io = new Server(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "https://admin.socket.io",
+    methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
+    credentials: true,
+  },
+});
 io.on("connection", newConnectionhandler);
+instrument(io, { namespaceName: "/admin", auth: false });
 
 passport.use("google", googleStrategy);
 
 //MIDDLEWARES
+const whitelist = ["http://localhost:3000", "https://admin.socket.io/"];
+const corsOpts = {
+  origin: (origin, corsNext) => {
+    console.log("CURRENT ORIGIN", origin);
+    if (!origin || whitelist.indexOf(origin) !== -1) {
+      corsNext(null, true);
+    } else {
+      corsNext(
+        createHttpError(400, `Origin ${origin} is not in the whitelist`)
+      );
+    }
+  },
+};
+expressServer.use(cors(corsOpts));
 
-expressServer.use(cors());
 expressServer.use(express.json());
 
 //ENDPOINTS

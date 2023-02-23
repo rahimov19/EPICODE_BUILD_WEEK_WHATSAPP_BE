@@ -196,7 +196,7 @@ chatsRouter.post(
 
             const { _id } = await newMessage.save();
 
-            req.body.members = [...req.body.members, req.user._id];
+            req.body.members = [...req.body.members];
             req.body.history = [_id];
             req.body.deletedBy = [];
 
@@ -206,6 +206,7 @@ chatsRouter.post(
               history: req.body.history,
               deletedBy: req.body.deletedBy,
               firstMessage: req.body.firstMessage,
+              room: req.body.room,
             };
 
             const newChat = new ChatsModel(chat);

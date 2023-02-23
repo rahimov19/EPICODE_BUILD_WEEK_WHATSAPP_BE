@@ -1,26 +1,30 @@
 let onlineUsers = [];
 
-export const newConnectionhandler = (newClient) => {
-  console.log("NEW CONNECTION:", newClient.id);
+export const newConnectionhandler = (socket) => {
+  console.log("NEW CONNECTION:", socket.id);
 
-  newClient.emit("welcome", { message: `Hello ${newClient.id}` });
+  socket.emit("welcome", { message: `Hello ${socket.id}` });
 
-  newClient.on("setUsername", (payload) => {
+  socket.on("setUsername", (payload) => {
     console.log(payload);
-    onlineUsers.push({ username: payload.username, socketId: newClient.id });
+    onlineUsers.push({ username: payload.username, socketId: socket.id });
 
-    newClient.emit("loggedIn", onlineUsers);
+    socket.emit("loggedIn", onlineUsers);
 
-    newClient.broadcast.emit("updatedOnlineUsersList", onlineUsers);
+    socket.broadcast.emit("updatedOnlineUsersList", onlineUsers);
   });
 
-  newClient.on("sendMessage", (message) => {
-    console.log("NEW MESSAGE:", message);
-    newClient.broadcast.emit("newMessage", message);
+  socket.on("sendMessage", (message, room) => {
+    console.log("NEW MESSAGE:", message, "ROOOOOOM", room);
+    socket.to(room).emit("newMessage", message);
   });
 
-  newClient.on("disconnect", () => {
-    onlineUsers = onlineUsers.filter((user) => user.socketId !== newClient.id);
-    newClient.broadcast.emit("updateOnlineUsersList", onlineUsers);
+  socket.on("join-room", (room) => {
+    socket.join(room);
+  });
+
+  socket.on("disconnect", () => {
+    onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
+    socket.broadcast.emit("updateOnlineUsersList", onlineUsers);
   });
 };
