@@ -38,7 +38,11 @@ instrument(io, { namespaceName: "/admin", auth: false });
 passport.use("google", googleStrategy);
 
 //MIDDLEWARES
-const whitelist = ["http://localhost:3000", "https://admin.socket.io/"];
+const whitelist = [
+  process.env.FE_URL,
+  process.env.FE_URL_DEPL,
+  "https://admin.socket.io/",
+];
 const corsOpts = {
   origin: (origin, corsNext) => {
     console.log("CURRENT ORIGIN", origin);
