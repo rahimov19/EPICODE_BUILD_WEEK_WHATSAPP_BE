@@ -40,9 +40,27 @@ chatsRouter.post(
       if (updatedMessage) {
         res.status(204).send(updatedMessage);
       } else {
-        next(createHttpError(404, `User with id ${req.user._id} not found`));
+        next(
+          createHttpError(
+            404,
+            `Message with id to upload an image is not found`
+          )
+        );
       }
     } catch (error) {
+      const deletedMessage = await MessagesModel.findByIdAndDelete(
+        req.params.messageId
+      );
+      if (deletedMessage) {
+        res.status(205).send();
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Message with id to upload an image is not found`
+          )
+        );
+      }
       next(error);
     }
   }
