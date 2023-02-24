@@ -4,10 +4,49 @@ import { checksChatSchema } from "./validator.js";
 import ChatsModel from "./model.js";
 import MessagesModel from "../messages/model.js";
 import { JWTAuthMiddleware } from "../../library/authentication/jwtAuth.js";
+import multer from "multer";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import { v2 as cloudinary } from "cloudinary";
 
 const chatsRouter = express.Router();
 
 // MESSAGES
+const cloudinaryUploader = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: {
+      format: "jpeg",
+      folder: "build-week-5-whatsApp-project",
+    },
+  }),
+}).single("message");
+
+chatsRouter.post(
+  "/:chatId/:messageId/image",
+  JWTAuthMiddleware,
+  cloudinaryUploader,
+  async (req, res, next) => {
+    try {
+      //we get from req.body the picture we want to upload
+
+      console.log("ID: ", req.user._id);
+      const url = req.file.path;
+      console.log("URL", url);
+      const updatedMessage = await MessagesModel.findByIdAndUpdate(
+        req.params.messageId,
+        { image: url },
+        { new: true, runValidators: true }
+      );
+      if (updatedMessage) {
+        res.status(204).send(updatedMessage);
+      } else {
+        next(createHttpError(404, `User with id ${req.user._id} not found`));
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 chatsRouter.post(
   "/:chatId/messages",
