@@ -1,5 +1,5 @@
 import createHttpError from "http-errors";
-import { verifyAccessToken } from "./tools.js";
+import { verifyAccessToken } from "./jwtTools.js";
 
 export const JWTAuthMiddleware = async (req, res, next) => {
   if (!req.headers.authorization) {
@@ -19,3 +19,4 @@ export const JWTAuthMiddleware = async (req, res, next) => {
     }
   }
 };
+//test
